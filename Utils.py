@@ -1,5 +1,7 @@
 import cv2 as cv
 import numpy as np
+import operator
+
 
 
 #Displays Image
@@ -15,131 +17,78 @@ def show_Image(title,image ,displayImages):
         cv.destroyAllWindows()
 
 
-#Prints matris to the console for debugging
-def print_matris(matris):
-    print(matris[0])
-    for i in range(matris[0]):
-        print()
-        for j in range(matris[1]):
-            print(matris[i][j] + " "),
+def show_two_Image(title,image1 , image2 ,displayImages):
+    if(displayImages == 0):
+        print("Skipped Displaying:" , title)
+    elif(displayImages == 1):
+        numpy_horizontal_concat = np.concatenate((image1, image2), axis=1)
+        cv.imshow(title, numpy_horizontal_concat)
+        cv.waitKey(0)
+    elif(displayImages == 2):
+        numpy_horizontal_concat = np.concatenate((image1, image2), axis=1)
+        cv.imshow(title, numpy_horizontal_concat)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
 
 
 
+def pre_process_image(image , filterType , displayOption ,skip_dilate=False):
+    show_Image("Input Image" , image , displayOption)
 
-def denoise_random_white_points(image):
-    cnts = cv.findContours(image, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-    for c in cnts:
-        area = cv.contourArea(c)
-        if area < 1000:
-            cv.drawContours(image, [c], -1, (0, 0, 0), -1)
-    return image
-
-def perspective_transform(image, corners):
-    def order_corner_points(corners):
-        # Separate corners into individual points
-        # Index 0 - top-right
-        #       1 - top-left
-        #       2 - bottom-left
-        #       3 - bottom-right
-        corners = [(corner[0][0], corner[0][1]) for corner in corners]
-        top_r, top_l, bottom_l, bottom_r = corners[0], corners[1], corners[2], corners[3]
-        return (top_l, top_r, bottom_r, bottom_l)
-
-    # Order points in clockwise order
-    ordered_corners = order_corner_points(corners)
-    top_l, top_r, bottom_r, bottom_l = ordered_corners
-
-    # Determine width of new image which is the max distance between
-    # (bottom right and bottom left) or (top right and top left) x-coordinates
-    width_A = np.sqrt(((bottom_r[0] - bottom_l[0]) ** 2) + ((bottom_r[1] - bottom_l[1]) ** 2))
-    width_B = np.sqrt(((top_r[0] - top_l[0]) ** 2) + ((top_r[1] - top_l[1]) ** 2))
-    width = max(int(width_A), int(width_B))
-
-    # Determine height of new image which is the max distance between
-    # (top right and bottom right) or (top left and bottom left) y-coordinates
-    height_A = np.sqrt(((top_r[0] - bottom_r[0]) ** 2) + ((top_r[1] - bottom_r[1]) ** 2))
-    height_B = np.sqrt(((top_l[0] - bottom_l[0]) ** 2) + ((top_l[1] - bottom_l[1]) ** 2))
-    height = max(int(height_A), int(height_B))
-
-    # Construct new points to obtain top-down view of image in
-    # top_r, top_l, bottom_l, bottom_r order
-    dimensions = np.array([[0, 0], [width - 1, 0], [width - 1, height - 1],
-                    [0, height - 1]], dtype = "float32")
-
-    # Convert to Numpy format
-    ordered_corners = np.array(ordered_corners, dtype="float32")
-
-    # Find perspective transform matrix
-    matrix = cv.getPerspectiveTransform(ordered_corners, dimensions)
-
-    # Return the transformed image
-    return cv.warpPerspective(image, matrix, (width, height))
-
-
-def create_clean_board(image , displayOptions , filterChoose):
-
-
-    # Parameters for selection
-    chooseFilter = displayOptions  # 0 = gaussianBlur , 1 = boxBlur , 2 = medianBlur
-    displayImages = displayOptions  # 0 = Do not show images , 1 = show images stacks , 2 = destroy image
-
-    # Read Image
-    image = cv.imread(image, 0)  # Read image as greyscale
-    show_Image("Input Image", image, displayImages)
-
-    # Denoise Image
-    denoisedImage = image
-    if (chooseFilter == 0):
-        denoisedImage = cv.GaussianBlur(image, (13, 13), 1.4)
-    elif (chooseFilter == 1):
-        print("Box Blur")
+    if filterType == 0:
+        proc = cv.GaussianBlur(image.copy(), (9, 9), 0)
+        show_Image("Gaussian Blurred", proc, displayOption)
+    elif filterType == 1:
+        print("Box Filter")
     else:
-        print("Median Blur")
-
-    show_Image("Deinoised Image", denoisedImage, displayImages)
-
-    # TrashHolding
-    tresholdedImage = cv.adaptiveThreshold(denoisedImage, 255,
-                                           cv.ADAPTIVE_THRESH_MEAN_C | cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY,
-                                           45, 5)
-    show_Image("Threshold Applied", tresholdedImage, displayImages)
-
-    invertedImage = cv.bitwise_not(tresholdedImage)
-    show_Image("Invertion", invertedImage, displayImages)
-
-    # Dilate the image
-    kernel = np.array([[0., 1., 0.], [1., 1., 1.], [0., 1., 0.]], np.uint8)
-    # dilatedImage = cv.dilate(invertedImage, kernel)
-    dilatedImage = invertedImage
-    # show_Image("Dilated Image", dilatedImage , displayImages)
-
-    # binaryCleanImage = denoise_random_white_points(dilatedImage)
-    binaryCleanImage = dilatedImage
-    show_Image("Denoised Image", binaryCleanImage, displayImages)
-
-    cnts = cv.findContours(binaryCleanImage, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-    cnts = sorted(cnts, key=cv.contourArea, reverse=True)
-    for c in cnts:
-        peri = cv.arcLength(c, True)
-        approx = cv.approxPolyDP(c, 0.015 * peri, True)
-        transformed = perspective_transform(binaryCleanImage, approx)
-        break
-
-    transformed = cv.erode(transformed, kernel)
-    show_Image("Trasnformed Image", transformed, displayImages)
-    cv.imwrite("board.png" , transformed)
+        print("Median Filter")
 
 
 
+    proc = cv.adaptiveThreshold(proc, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2)# Adaptive threshold using 11 nearest neighbour pixels
+    show_Image("Adaptive Threshhold", proc, displayOption)
+
+    proc = cv.bitwise_not(proc, proc)
+    show_Image("Invertion", proc, displayOption)
+
+    if not skip_dilate:
+        kernel = np.array([[0., 1., 0.], [1., 1., 1.], [0., 1., 0.]], np.uint8)
+        proc = cv.dilate(proc, kernel)
+        show_Image("Dilated Image", proc, displayOption)
+
+    return proc
 
 
 
+def get_field_corners(img ,mark_corners):
+    contours, h = cv.findContours(img.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)  # Find contours
+    contours = sorted(contours, key=cv.contourArea, reverse=True)  # Sort by area, descending
+    polygon = contours[0]  # Largest image
 
+    bottom_right, _ = max(enumerate([pt[0][0] + pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
+    top_left, _ = min(enumerate([pt[0][0] + pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
+    bottom_left, _ = min(enumerate([pt[0][0] - pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
+    top_right, _ = max(enumerate([pt[0][0] - pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
 
+    # Köşeleri doğru bulup bulmadığını kontrol et.
+    if mark_corners == 1:
+        cornerDebug = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+        cornerDebug = cv.circle(cornerDebug, (polygon[top_left][0]), radius=1, color=(0, 255, 0), thickness=8);print("Sol Üst Köşe: " , polygon[top_left][0])#Yeşil
+        cornerDebug = cv.circle(cornerDebug, (polygon[top_right][0]), radius=1, color=(0, 0, 255), thickness=8);print("Sağ Üst Köşe: " , polygon[top_right][0])#Kırmızı
+        cornerDebug = cv.circle(cornerDebug, (polygon[bottom_right][0]), radius=1, color=(255, 0, 0), thickness=8);print("Sağ Alt Köşe: " , polygon[bottom_right][0])#Mavi
+        cornerDebug = cv.circle(cornerDebug, (polygon[bottom_left][0]), radius=1, color=(255, 255, 0), thickness=8);print("Sol Alt Köşe: " ,polygon[bottom_left][0])#Cyan
+        show_Image("Corners Of Game Field" , cornerDebug , 2)
+    else:
+        print("Skipped Displaying:  Marked Corners")
+    return [polygon[top_left][0], polygon[top_right][0], polygon[bottom_right][0], polygon[bottom_left][0]]
 
-
-
+def clear_image(image):
+    img = image
+    labelnum, labelimg, contours, GoCs = cv.connectedComponentsWithStats(img )
+    for label in range(1, labelnum):
+        x, y, w, h, size = contours[label]
+        if size <= 50:
+            img[y:y + h, x:x + w] = 0
+    return img
 
 
