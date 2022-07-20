@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import Utils as u
 import warnings
+import Harris_Corner_Point_Detection as hc
 warnings.filterwarnings('ignore')
 
 
@@ -70,10 +71,10 @@ def get_digits(img, squares,filterChoose , displayOptions):
 def parse_grid(path , filterChoose , displayOptions , debugMode):
     original = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     processed = u.pre_process_image(original , filterChoose , displayOptions)
-    u.show_Image("Processed" , processed , debugMode)
+    #u.show_Image("Processed" , processed , debugMode)
     corners = u.get_field_corners(processed ,debugMode)
     transformed = perpectiveTransform(original, corners)
-    u.show_Image("Cropped", transformed, debugMode)
+    u.show_Image("Perspective Transform", transformed, debugMode)
     squares = infer_grid(transformed , debugMode)
     digits = get_digits(transformed, squares , filterChoose ,displayOptions)
     return digits
@@ -83,7 +84,13 @@ def parse_grid(path , filterChoose , displayOptions , debugMode):
 if __name__ == '__main__':
 
    image = cv2.imread("input5.jpeg" , 0)
+
+
+
+
+
+
    sudokuDigits = parse_grid("input5.jpeg" , filterChoose=0 , displayOptions=2 , debugMode=1)
-   for i in range(81):
-        noised_image = sudokuDigits[i].copy()
-        u.show_two_Image("Noised - Denoised" , noised_image, u.clear_image(sudokuDigits[i]) , 2)
+   # for i in range(81):
+   #      noised_image = sudokuDigits[i].copy()
+   #      u.show_two_Image("Noised - Denoised" , noised_image, u.clear_image(sudokuDigits[i]) , 2)

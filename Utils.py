@@ -36,7 +36,7 @@ def pre_process_image(image , filterType , displayOption ,skip_dilate=False):
     show_Image("Input Image" , image , displayOption)
 
     if filterType == 0:
-        proc = cv.GaussianBlur(image.copy(), (9, 9), 0)
+        proc = cv.GaussianBlur(image.copy(), (7, 7), 0)
         show_Image("Gaussian Blurred", proc, displayOption)
     elif filterType == 1:
         print("Box Filter")

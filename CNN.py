@@ -35,10 +35,19 @@
 # def define_model():
 # 	model = Sequential()
 # 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1)))
+#--- 7x7
 # 	model.add(MaxPooling2D((2, 2)))
+#--- batchnorm
 # 	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform'))
+#--- batchnorm ??? - 3x3 ---> 5x5
 # 	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform'))
 # 	model.add(MaxPooling2D((2, 2)))
+#--- batchnorm
+# 	model.add(Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform'))
+#--- batchnorm
+# 	model.add(Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform'))
+# 	model.add(MaxPooling2D((2, 2)))
+#--- batchnorm
 # 	model.add(Flatten())
 # 	model.add(Dense(100, activation='relu', kernel_initializer='he_uniform'))
 # 	model.add(Dense(10, activation='softmax'))
