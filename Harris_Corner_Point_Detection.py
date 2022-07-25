@@ -2,19 +2,13 @@ import numpy as np
 import cv2
 
 
-
-
-
-
-
-filename = 'input5.jpeg'
+filename = 'input2.jpeg'
 img = cv2.imread(filename)
 mapper = img.copy()
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 gray = np.float32(gray)
-dst = cv2.cornerHarris(gray, 2, 3, 0.11)
-
+dst = cv2.cornerHarris(gray, 2, 3, 0.24)
 # result is dilated for marking the corners, not important
 dst = cv2.dilate(dst, None)
 
@@ -39,15 +33,9 @@ pts2 = np.float32([[0, 0], [400, 0],
                    [0, 640], [400, 640]])
 insidePoints={}
 size=len(points)
-for i in range(size):
-    index_x=points[i][0]
-    index_y=points[i][1]
-    #max ve min değeri buluncak y indexlerindeki cornerlardan o 4 cornerdan
-    if(index_x>=5 && index_x<=18&&index_y<=459&&index_y>=125)
-        insidePoints.a
 
 
-print("point[1]:",points[1])
+
 # # Apply Perspective Transform Algorithm
 # matrix = cv2.getPerspectiveTransform(pts1, pts2)
 # print(matrix)

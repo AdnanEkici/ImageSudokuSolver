@@ -92,18 +92,17 @@ def load_image(filename):
 	return img
 
 # load an image and predict the class
-def run_example():
+def findDigit(image):
 	# load the image
-	img = load_image('62.png')
+	img = load_image(image)
 	# load model
-	model = load_model('final_model.h5')
+	model = load_model('digit_clfr.h5')
 	# predict the class
 	predict_value = model.predict(img)
 	digit = argmax(predict_value)
 	print("Digit is: " , digit)
+	return digit
 
-# entry point, run the example
-run_example()
 
 
 

@@ -82,9 +82,9 @@ def get_field_corners(img ,mark_corners):
         print("Skipped Displaying:  Marked Corners")
     return [polygon[top_left][0], polygon[top_right][0], polygon[bottom_right][0], polygon[bottom_left][0]]
 
-def clear_image(image):
+def denois_digit(image):
     img = image
-    labelnum, labelimg, contours, GoCs = cv.connectedComponentsWithStats(img )
+    labelnum, labelimg, contours, _ = cv.connectedComponentsWithStats(img)
     for label in range(1, labelnum):
         x, y, w, h, size = contours[label]
         if size <= 50:

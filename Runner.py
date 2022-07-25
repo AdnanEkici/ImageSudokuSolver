@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 import Utils as u
 import warnings
-import Harris_Corner_Point_Detection as hc
+import CNN
+import math
 warnings.filterwarnings('ignore')
 
 
@@ -71,7 +72,7 @@ def get_digits(img, squares,filterChoose , displayOptions):
 def parse_grid(path , filterChoose , displayOptions , debugMode):
     original = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     processed = u.pre_process_image(original , filterChoose , displayOptions)
-    #u.show_Image("Processed" , processed , debugMode)
+    u.show_Image("Processed" , processed , debugMode)
     corners = u.get_field_corners(processed ,debugMode)
     transformed = perpectiveTransform(original, corners)
     u.show_Image("Perspective Transform", transformed, debugMode)
@@ -80,17 +81,76 @@ def parse_grid(path , filterChoose , displayOptions , debugMode):
     return digits
 
 
+def denoise_image_with_connected_components(noisyDigitArray):
+    denoised_digits = noisyDigitArray.copy()
+    for i in range(len(denoised_digits)):
+        denoised_digits[i] = u.denois_digit(noisyDigitArray[i])
+
+    return denoised_digits
+
+
+def clearify_image(image):
+
+    rows,cols = image.shape
+    for i in range(rows):
+        for j in range(10):
+            image[i][j] = 0
+
+    for i in range(rows-1 , 0 , -1):
+        for j in range(cols-1 , 50 , -1):
+            image[i][j] = 0
+
+    for i in range(10):
+        for j in range(cols):
+            image[i][j] = 0
+
+    for j in range(cols-1 , 0 , -1):
+        for i in range(rows-1 , 43 , -1):
+            image[i][j] = 0
+
+    return image
+
+def get_white_black_ratio(digit):
+    number_of_white_pix = np.sum(digit == 255)
+    number_of_black_pix = np.sum(digit == 0)  # extracting only black pixels
+    if math.isinf(number_of_black_pix/number_of_white_pix):
+        return 999
+    else:
+        return  number_of_black_pix/number_of_white_pix
+
+def isDigit(black_white_ratio):
+    if 12 < black_white_ratio and 30 > black_white_ratio:
+        return True
+    else:
+        return False
+
 
 if __name__ == '__main__':
 
-   image = cv2.imread("input5.jpeg" , 0)
+   image_filename = "input5.jpeg"
+   image = cv2.imread(image_filename , 0)
+
+   noisySudokuDigits = parse_grid(image_filename , filterChoose=0 , displayOptions=0 , debugMode=0)
+   denoisedDigits = denoise_image_with_connected_components(noisySudokuDigits)
+
+   # for i in range(len(denoisedDigits)):
+   #    cv2.imwrite("digit.png" , clearify_image(denoisedDigits[i]))
+   #    digit = cv2.imread("digit.png" ,0)
+   #    CNN.findDigit("digit.png")
+   #    u.show_Image("Clearify", clearify_image(denoisedDigits[i]), 1)
+
+   sudoku = np.zeros((81))
+
+   for i in range(len(denoisedDigits)):
+       cv2.imwrite("digit.png", clearify_image(denoisedDigits[i]))
+       digit = cv2.imread("digit.png", 1)
+       if isDigit(get_white_black_ratio(digit)):
+        sudoku[i] = CNN.findDigit("digit.png")
+        u.show_Image("Digit", clearify_image(denoisedDigits[i]), 0)
+       else:
+        print("Empty")
+        sudoku[i] = -1
+        # u.show_Image("Empty", clearify_image(denoisedDigits[i]), 1)
 
 
-
-
-
-
-   sudokuDigits = parse_grid("input5.jpeg" , filterChoose=0 , displayOptions=2 , debugMode=1)
-   # for i in range(81):
-   #      noised_image = sudokuDigits[i].copy()
-   #      u.show_two_Image("Noised - Denoised" , noised_image, u.clear_image(sudokuDigits[i]) , 2)
+   print(sudoku)
