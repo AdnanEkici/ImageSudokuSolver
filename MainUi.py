@@ -1,4 +1,8 @@
+# importing the tkinter module and PIL
+# that is pillow module
 from tkinter import *
+from tkinter import filedialog
+import os
 from PIL import ImageTk, Image
 
 
@@ -69,7 +73,13 @@ def back(img_no):
 	button_exit.grid(row=0, column=6)
 	button_forward.grid(row=5, column=6)
 
+def showImage():
 
+	fln=filedialog.askopenfilename(initialdir=os.getcwd(),title="Resmi Seçiniz",filetypes=(("JPEG File","*.jpeg"),("PNG file","*.png")))
+	img=Image.open(fln)
+	img=ImageTk.PhotoImage(img)
+	label.configure(image=img)
+	label.image=img
 # Calling the Tk (The initial constructor of tkinter)
 root = Tk()
 
@@ -92,7 +102,7 @@ image_no_4 = ImageTk.PhotoImage(Image.open("input5.jpeg"))
 # List of the images so that we traverse the list
 List_images = [image_no_1, image_no_2, image_no_3, image_no_4]
 
-label = Label(image=image_no_1)
+label = Label(root)
 
 # We have to show the box so this below line is needed
 label.grid(row=1, column=2, columnspan=4)
@@ -101,6 +111,8 @@ label.grid(row=1, column=2, columnspan=4)
 button_back = Button(root, text="Geri", command=back,
 					state=DISABLED)
 
+# We will have three button back ,forward and exit
+button_browse = Button(root, text="Yükle", command=showImage)
 # root.quit for closing the app
 button_exit = Button(root, text="Çıkış",
 					command=root.quit)
@@ -110,7 +122,9 @@ button_forward = Button(root, text="İleri",
 
 # grid function is for placing the buttons in the frame
 button_back.grid(row=5, column=1)
+button_browse.grid(row=0, column=1)
 button_exit.grid(row=0, column=6)
 button_forward.grid(row=5, column=6)
 
 root.mainloop()
+
