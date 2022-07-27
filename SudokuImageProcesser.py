@@ -126,7 +126,7 @@ def clearify_image(image):
     rows, cols = image.shape
     cropImg = image[0:41, 0:41]
     cropImg = cropImg[10:10 + cols, 10:10 + rows]
-    cropImg = cv2.copyMakeBorder(cropImg, 8, 10, 9, 10, cv2.BORDER_CONSTANT, 0)
+    cropImg = cv2.copyMakeBorder(cropImg, 8, 10, 9, 10, cv2.BORDER_CONSTANT, 0)#Test
 
     return cropImg
 
