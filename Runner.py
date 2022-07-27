@@ -4,6 +4,7 @@ import numpy as np
 import Utils as u
 import warnings
 import CNN
+import copy
 import math
 warnings.filterwarnings('ignore')
 
@@ -51,8 +52,9 @@ def infer_grid(img ,markCellCorners):
             cornerDebug = cv2.circle(cornerDebug, (int(cells[i][0][1]), int(cells[i][1][0])), radius=1,color=(255, 0, 255), thickness=8)
             cornerDebug = cv2.circle(cornerDebug, (int(cells[i][1][1]), int(cells[i][0][0])), radius=1,color=(255, 0, 255), thickness=8)
             cornerDebug = cv2.circle(cornerDebug, (int(cells[i][1][1]), int(cells[i][1][0])), radius=1,color=(255, 0, 255), thickness=8)
-        cv2.imshow("Marked Cells", cornerDebug)
-        cv2.waitKey(0)
+        #cv2.imshow("Marked Cells", cornerDebug)
+        #cv2.waitKey(0)
+        cv2.imwrite("7.jpeg" , cornerDebug)
 
     else:
         print("Skipped Displaying: Mark Cells")
@@ -64,7 +66,7 @@ def extract_digit(img, cell):
 
 def get_digits(img, squares,filterChoose , displayOptions):
     digits = []
-    img = u.pre_process_image(img.copy(),filterChoose , displayOptions, skip_dilate=True)
+    img = u.pre_process_image(img.copy(),filterChoose , 4, skip_dilate=True)
     for square in squares:
         digits.append(extract_digit(img, square))
     return digits
@@ -72,11 +74,12 @@ def get_digits(img, squares,filterChoose , displayOptions):
 def parse_grid(path , filterChoose , displayOptions , debugMode):
     original = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     processed = u.pre_process_image(original , filterChoose , displayOptions)
-    u.show_Image("Processed" , processed , debugMode)
-    corners = u.get_field_corners(processed ,debugMode)
+    #u.show_Image("Processed" , processed , debugMode)
+    corners = u.get_field_corners(processed ,1)
     transformed = perpectiveTransform(original, corners)
-    u.show_Image("Perspective Transform", transformed, debugMode)
-    squares = infer_grid(transformed , debugMode)
+    #u.show_Image("Perspective Transform", transformed, debugMode)
+    cv2.imwrite("6.jpeg" , transformed)
+    squares = infer_grid(transformed , 1)
     digits = get_digits(transformed, squares , filterChoose ,displayOptions)
     return digits
 
@@ -85,6 +88,7 @@ def denoise_image_with_connected_components(noisyDigitArray):
     denoised_digits = noisyDigitArray.copy()
     for i in range(len(denoised_digits)):
         denoised_digits[i] = u.denois_digit(noisyDigitArray[i])
+
 
     return denoised_digits
 
@@ -140,7 +144,7 @@ def clearify_image(image):
             image[i][j] = 0
 
     for j in range(cols-1 , 0 , -1):
-        for i in range(rows-1 , 43 , -1):
+        for i in range(rows-1 , 44 , -1):
             image[i][j] = 0
 
     return image
@@ -164,7 +168,10 @@ if __name__ == '__main__':
    image = cv2.imread(image_filename , 0)
 
    noisySudokuDigits = parse_grid(image_filename , filterChoose=0 , displayOptions=0 , debugMode=0)
+   deepCopyNoisyDigits = copy.deepcopy(noisySudokuDigits)
    denoisedDigits = denoise_image_with_connected_components(noisySudokuDigits)
+   deepCopydenoisedDigits = copy.deepcopy(denoisedDigits)
+
 
    # for i in range(len(denoisedDigits)):
    #    cv2.imwrite("digit.png" , clearify_image(denoisedDigits[i]))
@@ -172,10 +179,13 @@ if __name__ == '__main__':
    #    CNN.findDigit("digit.png")
    #    u.show_Image("Clearify", clearify_image(denoisedDigits[i]), 1)
 
+   for i in range(len(denoisedDigits)):
+       u.show_three_Image("Noisy --- Denoised --- Post Processed", deepCopyNoisyDigits[i], denoisedDigits[i], clearify_image(deepCopydenoisedDigits[i]) ,  2)
+
    sudoku = np.zeros((81))
 
    for i in range(len(denoisedDigits)):
-       resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20) , interpolation = cv2.INTER_CUBIC)
+       resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20))
        u.show_Image("Resized: ", resizedDigit, 0)
        cv2.imwrite("digit.png", resizedDigit)
        digit = cv2.imread("digit.png", 1)
