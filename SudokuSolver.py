@@ -9,7 +9,7 @@ def output(a):
 
 N = 9
 
-field = processer.extract_sudoku_board("gold.jpeg")
+field = processer.extract_sudoku_board("33.jpeg")
 
 def print_field(field):
     """ Print a sudoku field. """
