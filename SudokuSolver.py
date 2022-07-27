@@ -29,6 +29,8 @@ def print_field(field):
         if (i + 1) % 3 == 0 and i < 8:
             output("- - - + - - - + - - -\n")
 
+    return field
+
 
 def read(field):
     """ Read field into state (replace 0/None with set of possible values). """
@@ -153,4 +155,4 @@ def solve(state):
                 return None
 
 
-print_field(solve(state))
+print(print_field(solve(state)))
