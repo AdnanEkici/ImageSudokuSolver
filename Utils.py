@@ -38,6 +38,9 @@ def show_three_Image(title,image1 , image2, image3 ,displayImages):
         cv.imshow(title, numpy_horizontal_concat)
         cv.waitKey(0)
     elif(displayImages == 2):
+        image1 = cv.resize(image1, (60, 60))
+        image2 = cv.resize(image2, (60, 60))
+        image3 = cv.resize(image3, (60, 60))
         numpy_horizontal_concat = np.concatenate((image1, image2 , image3), axis=1)
         cv.imshow(title, numpy_horizontal_concat)
         cv.waitKey(0)

@@ -1,4 +1,3 @@
-from PIL import Image
 import cv2
 import numpy as np
 import Utils as u
@@ -7,10 +6,6 @@ import CNN
 import copy
 import math
 warnings.filterwarnings('ignore')
-
-
-
-
 
 def distance_between(p1, p2):
     a = p2[0] - p1[0]
@@ -83,7 +78,6 @@ def parse_grid(path , filterChoose , displayOptions , debugMode):
     digits = get_digits(transformed, squares , filterChoose ,displayOptions)
     return digits
 
-
 def denoise_image_with_connected_components(noisyDigitArray):
     denoised_digits = noisyDigitArray.copy()
     for i in range(len(denoised_digits)):
@@ -91,7 +85,6 @@ def denoise_image_with_connected_components(noisyDigitArray):
 
 
     return denoised_digits
-
 
 def clearify_image(image):
 
@@ -123,91 +116,78 @@ def get_white_black_ratio(digit):
         return  number_of_black_pix/number_of_white_pix
 
 def isDigit(black_white_ratio):
-    if 12 < black_white_ratio and 32 > black_white_ratio:
+    if 7 < black_white_ratio and 40 > black_white_ratio:
         return True
     else:
         return False
 
 def clearify_image(image):
 
-    rows,cols = image.shape
-    for i in range(rows):
-        for j in range(20):
-            image[i][j] = 0
+    rows, cols = image.shape
+    cropImg = image[0:41, 0:41]
+    cropImg = cropImg[10:10 + cols, 10:10 + rows]
+    cropImg = cv2.copyMakeBorder(cropImg, 8, 10, 9, 10, cv2.BORDER_CONSTANT, 0)
 
-    for i in range(rows-1 , 0 , -1):
-        for j in range(cols-1 , 50 , -1):
-            image[i][j] = 0
-
-    for i in range(10):
-        for j in range(cols):
-            image[i][j] = 0
-
-    for j in range(cols-1 , 0 , -1):
-        for i in range(rows-1 , 44 , -1):
-            image[i][j] = 0
-
-    return image
-
+    return cropImg
 
 def find_threshholds_of_digits_debug(denoisedDigits):
-        pad = 15
         for i in range(len(denoisedDigits)):
             resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (28, 28))
-            resizedDigit = cv2.copyMakeBorder(resizedDigit, pad, pad, pad, pad, cv2.BORDER_CONSTANT, (0, 0, 0))
-            resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20))
             cv2.imwrite("digit.png", resizedDigit)
+
             digit = cv2.imread("digit.png", 1)
             print(get_white_black_ratio(digit))
+            isDigit(get_white_black_ratio(digit))
             u.show_Image("Digit", clearify_image(denoisedDigits[i]), 1)
 
+def extract_sudoku_board(image_filename):
 
-if __name__ == '__main__':
+    noisySudokuDigits = parse_grid(image_filename, filterChoose=0, displayOptions=0, debugMode=0)
+    deepCopyNoisyDigits = copy.deepcopy(noisySudokuDigits)
+    denoisedDigits = denoise_image_with_connected_components(noisySudokuDigits)
+    deepCopydenoisedDigits = copy.deepcopy(denoisedDigits)
 
-   image_filename = "input5.jpeg"
-   image = cv2.imread(image_filename , 0)
+    # for i in range(len(denoisedDigits)):
+    #    cv2.imwrite("digit.png" , clearify_image(denoisedDigits[i]))
+    #    digit = cv2.imread("digit.png" ,0)
+    #    CNN.findDigit("digit.png")
+    #    u.show_Image("Clearify", clearify_image(denoisedDigits[i]), 1)
 
-   noisySudokuDigits = parse_grid(image_filename , filterChoose=0 , displayOptions=0 , debugMode=0)
-   deepCopyNoisyDigits = copy.deepcopy(noisySudokuDigits)
-   denoisedDigits = denoise_image_with_connected_components(noisySudokuDigits)
-   deepCopydenoisedDigits = copy.deepcopy(denoisedDigits)
+    # find_threshholds_of_digits_debug(denoisedDigits)
 
+    # for i in range(len(denoisedDigits)):
+    #  u.show_three_Image("Noisy --- Denoised --- Post Processed", deepCopyNoisyDigits[i], denoisedDigits[i], clearify_image(deepCopydenoisedDigits[i]) ,  2)
 
-   # for i in range(len(denoisedDigits)):
-   #    cv2.imwrite("digit.png" , clearify_image(denoisedDigits[i]))
-   #    digit = cv2.imread("digit.png" ,0)
-   #    CNN.findDigit("digit.png")
-   #    u.show_Image("Clearify", clearify_image(denoisedDigits[i]), 1)
+    sudoku = np.zeros((81))
 
-   for i in range(len(denoisedDigits)):
-       u.show_three_Image("Noisy --- Denoised --- Post Processed", deepCopyNoisyDigits[i], denoisedDigits[i], clearify_image(deepCopydenoisedDigits[i]) ,  2)
+    for i in range(len(denoisedDigits)):
+        resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (28, 28))
+        # u.show_Image("Resized: ", resizedDigit, 0)
+        cv2.imwrite("digit.png", resizedDigit)
+        digit = cv2.imread("digit.png", 1)
+        if isDigit(get_white_black_ratio(resizedDigit)):
+            transformed_digit = CNN.findDigit("digit.png")
+            if (transformed_digit == 0):
+                sudoku[i] = 8
+            else:
+                sudoku[i] = transformed_digit
 
-   sudoku = np.zeros((81))
+        # u.show_Image("Digit", clearify_image(denoisedDigits[i]), 0)
+        else:
+            print("Empty")
+            sudoku[i] = 0
+            # u.show_Image("Empty", clearify_image(denoisedDigits[i]), 1)
 
-   for i in range(len(denoisedDigits)):
-       resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20))
-       u.show_Image("Resized: ", resizedDigit, 0)
-       cv2.imwrite("digit.png", resizedDigit)
-       digit = cv2.imread("digit.png", 1)
-       if isDigit(get_white_black_ratio(clearify_image(denoisedDigits[i]))):
-        sudoku[i] = CNN.findDigit("digit.png")
-        u.show_Image("Digit", clearify_image(denoisedDigits[i]), 0)
-       else:
-        print("Empty")
-        sudoku[i] = -1
-        # u.show_Image("Empty", clearify_image(denoisedDigits[i]), 1)
+    sudoku = sudoku.astype(int)
+    sudokuMatris = np.reshape(sudoku, (9, 9), order='C')
 
+    sudokuList = []
+    for i in range(9):
+        sudokuList.append(sudokuMatris[i])
 
-   print(sudoku)
+    print(sudokuMatris)
+    sudokuMatris = sudokuMatris.tolist()
+    return sudokuMatris
 
-
-
-   # pad = 15
-   # for i in range(len(denoisedDigits)):
-   #     resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20))
-   #     cv2.imwrite("digit.png", resizedDigit)
-   #     digit = cv2.imread("digit.png", 1)
-   #     print(get_white_black_ratio(clearify_image(denoisedDigits[i])      ))
-   #     u.show_Image("Digit", clearify_image(denoisedDigits[i]), 1)
 
 
