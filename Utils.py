@@ -16,7 +16,6 @@ def show_Image(title,image ,displayImages):
         cv.waitKey(0)
         cv.destroyAllWindows()
 
-
 def show_two_Image(title,image1 , image2 ,displayImages):
     if(displayImages == 0):
         print("Skipped Displaying:" , title)
@@ -29,8 +28,6 @@ def show_two_Image(title,image1 , image2 ,displayImages):
         cv.imshow(title, numpy_horizontal_concat)
         cv.waitKey(0)
         cv.destroyAllWindows()
-
-
 
 def pre_process_image(image , filterType , displayOption ,skip_dilate=False):
     show_Image("Input Image" , image , displayOption)
@@ -57,8 +54,6 @@ def pre_process_image(image , filterType , displayOption ,skip_dilate=False):
         show_Image("Dilated Image", proc, displayOption)
 
     return proc
-
-
 
 def get_field_corners(img ,mark_corners):
     contours, h = cv.findContours(img.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)  # Find contours

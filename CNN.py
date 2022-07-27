@@ -73,15 +73,20 @@
 # run_test_harness()
 
 # make a prediction for a new image.
+import numpy
 from numpy import argmax
 from tensorflow.keras.preprocessing.image import load_img
+import cv2 as cv
 from tensorflow.keras.preprocessing.image import img_to_array
 from keras.models import load_model
+import Utils as u
 
 # load and prepare the image
 def load_image(filename):
 	# load the image
 	img = load_img(filename, grayscale=True, target_size=(28, 28))
+	numpydata = numpy.asarray(img)
+	#u.show_Image("CNN " , numpydata , 1)
 	# convert to array
 	img = img_to_array(img)
 	# reshape into a single sample with 1 channel
@@ -95,8 +100,9 @@ def load_image(filename):
 def findDigit(image):
 	# load the image
 	img = load_image(image)
+
 	# load model
-	model = load_model('digit_clfr.h5')
+	model = load_model('CNN_Adnan_Modeli.h5')
 	# predict the class
 	predict_value = model.predict(img)
 	digit = argmax(predict_value)

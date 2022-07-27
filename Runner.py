@@ -93,14 +93,14 @@ def clearify_image(image):
 
     rows,cols = image.shape
     for i in range(rows):
-        for j in range(10):
+        for j in range(15):
             image[i][j] = 0
 
     for i in range(rows-1 , 0 , -1):
         for j in range(cols-1 , 50 , -1):
             image[i][j] = 0
 
-    for i in range(10):
+    for i in range(5):
         for j in range(cols):
             image[i][j] = 0
 
@@ -119,10 +119,43 @@ def get_white_black_ratio(digit):
         return  number_of_black_pix/number_of_white_pix
 
 def isDigit(black_white_ratio):
-    if 12 < black_white_ratio and 30 > black_white_ratio:
+    if 12 < black_white_ratio and 32 > black_white_ratio:
         return True
     else:
         return False
+
+def clearify_image(image):
+
+    rows,cols = image.shape
+    for i in range(rows):
+        for j in range(20):
+            image[i][j] = 0
+
+    for i in range(rows-1 , 0 , -1):
+        for j in range(cols-1 , 50 , -1):
+            image[i][j] = 0
+
+    for i in range(10):
+        for j in range(cols):
+            image[i][j] = 0
+
+    for j in range(cols-1 , 0 , -1):
+        for i in range(rows-1 , 43 , -1):
+            image[i][j] = 0
+
+    return image
+
+
+def find_threshholds_of_digits_debug(denoisedDigits):
+        pad = 15
+        for i in range(len(denoisedDigits)):
+            resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (28, 28))
+            resizedDigit = cv2.copyMakeBorder(resizedDigit, pad, pad, pad, pad, cv2.BORDER_CONSTANT, (0, 0, 0))
+            resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20))
+            cv2.imwrite("digit.png", resizedDigit)
+            digit = cv2.imread("digit.png", 1)
+            print(get_white_black_ratio(digit))
+            u.show_Image("Digit", clearify_image(denoisedDigits[i]), 1)
 
 
 if __name__ == '__main__':
@@ -142,9 +175,11 @@ if __name__ == '__main__':
    sudoku = np.zeros((81))
 
    for i in range(len(denoisedDigits)):
-       cv2.imwrite("digit.png", clearify_image(denoisedDigits[i]))
+       resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20) , interpolation = cv2.INTER_CUBIC)
+       u.show_Image("Resized: ", resizedDigit, 0)
+       cv2.imwrite("digit.png", resizedDigit)
        digit = cv2.imread("digit.png", 1)
-       if isDigit(get_white_black_ratio(digit)):
+       if isDigit(get_white_black_ratio(clearify_image(denoisedDigits[i]))):
         sudoku[i] = CNN.findDigit("digit.png")
         u.show_Image("Digit", clearify_image(denoisedDigits[i]), 0)
        else:
@@ -154,3 +189,15 @@ if __name__ == '__main__':
 
 
    print(sudoku)
+
+
+
+   # pad = 15
+   # for i in range(len(denoisedDigits)):
+   #     resizedDigit = cv2.resize(clearify_image(denoisedDigits[i]), (24, 20))
+   #     cv2.imwrite("digit.png", resizedDigit)
+   #     digit = cv2.imread("digit.png", 1)
+   #     print(get_white_black_ratio(clearify_image(denoisedDigits[i])      ))
+   #     u.show_Image("Digit", clearify_image(denoisedDigits[i]), 1)
+
+
