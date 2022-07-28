@@ -5,9 +5,28 @@ from tkinter import filedialog
 import os
 from PIL import ImageTk, Image
 import cv2 as cv
+import SudokuSolver as sudokuSolver
+import SudokuImageProcesser as processer
 import time
 
 text="Sudoku Solver"
+firstArray=[]
+resultArray=[]
+filename=""
+
+def solve(sudoku):
+    #using recursion and backtracking, here we go.
+    empties = [(i,j) for i in range(9) for j in range(9) if sudoku[i][j] == 0]
+    predict = lambda i, j: set(range(1,10))-set([sudoku[i][j]])-set([sudoku[y+range(1,10,3)[i//3]][x+range(1,10,3)[j//3]] for y in (-1,0,1) for x in (-1,0,1)])-set(sudoku[i])-set(list(zip(*sudoku))[j])
+    if len(empties)==0:return True
+    gap = next(iter(empties))
+    predictions = predict(*gap)
+    for i in predictions:
+        sudoku[gap[0]][gap[1]] = i
+        if solve(sudoku):return sudoku
+        sudoku[gap[0]][gap[1]] = 0
+    return False
+
 
 def forward(img_no):
 	print(img_no)
@@ -81,18 +100,49 @@ def back(img_no):
 		button_forward.grid(row=5, column=6)
 
 def showImage():
+	global label
+	global List_images
+	global button_forward
+	global button_back
+	global button_exit
+	label.grid_forget()
 
-	fln=filedialog.askopenfilename(initialdir=os.getcwd(),title="Resmi Seçiniz",filetypes=(("JPEG File",".jpeg"),("PNG file",".png")))
+	fln=filedialog.askopenfilename(initialdir=os.getcwd(),title="Resmi Seçiniz",filetypes=(("JPEG File",".jpeg"),("PNG file",".png"),("JPG file",".jpg")))
 	print(fln)
 	
 	img=Image.open(fln)
 	img=ImageTk.PhotoImage(img)
 	label.configure(image=img)
 	label.image=img
+
+	sudokuSolver.filename=fln
+	print(sudokuSolver.filename)
+	sudokuSolver.field=processer.extract_sudoku_board(fln)
+	firstArray=sudokuSolver.field
+
+	image_no_1 = ImageTk.PhotoImage(Image.open("1.jpeg"))
+	image_no_2 = ImageTk.PhotoImage(Image.open("2.jpeg"))
+	image_no_3 = ImageTk.PhotoImage(Image.open("3.jpeg"))
+	image_no_4 = ImageTk.PhotoImage(Image.open("4.jpeg"))
+	image_no_5 = ImageTk.PhotoImage(Image.open("5.jpeg"))
+	image_no_6 = ImageTk.PhotoImage(Image.open("6.jpeg"))
+	image_no_7 = ImageTk.PhotoImage(Image.open("7.jpeg"))
+	image_no_8 = ImageTk.PhotoImage(Image.open("8.jpeg"))
+	image_no_9 = ImageTk.PhotoImage(Image.open("9.jpeg"))
+	image_no_10 = ImageTk.PhotoImage(Image.open("10.jpeg"))
+
+	# List of the images so that we traverse the list
+	List_images = [image_no_1, image_no_2, image_no_3, image_no_4, image_no_5, image_no_6, image_no_7, image_no_8,
+				   image_no_9, image_no_10]
 	#time.sleep(3)
 	#cv.imshow("Debug" , cv.imread(fln , 0))
 	#cv.waitKey()
-	
+
+	label.grid(row=1, column=2, columnspan=4)
+	button_back.grid(row=5, column=1)
+	button_exit.grid(row=0, column=6)
+	button_forward.grid(row=5, column=6)
+	return
 def solver():
 	global label
 	label.grid_forget()
@@ -139,9 +189,12 @@ def solver():
 					rows.append(int(val))
 			board.append(rows)
 		print(board)
+
+		#sudokuSolver.state = sudokuSolver.read(board)
+		#resultArray = sudokuSolver.solve(sudokuSolver.state)
 		#burda sen board alcan dönen board aşağıda olcak
-		board=[[3, 4, 7, 2, 5, 1, 8, 6, 9], [2, 1, 9, 7, 6, 8, 4, 3, 5], [5, 8, 6, 3, 4, 9, 2, 1, 7], [6, 7, 8, 5, 1, 3, 9, 4, 2], [4, 5, 1, 9, 2, 6, 7, 8, 3], [9, 2, 3, 8, 7, 4, 1, 5, 6], [1, 9, 2, 4, 3, 5, 6, 7, 8], [8, 6, 5, 1, 9, 7, 3, 2, 4], [7, 3, 4, 6, 8, 2, 5, 9, 1]]
-		fil(board)
+		#board=[[3, 4, 7, 2, 5, 1, 8, 6, 9], [2, 1, 9, 7, 6, 8, 4, 3, 5], [5, 8, 6, 3, 4, 9, 2, 1, 7], [6, 7, 8, 5, 1, 3, 9, 4, 2], [4, 5, 1, 9, 2, 6, 7, 8, 3], [9, 2, 3, 8, 7, 4, 1, 5, 6], [1, 9, 2, 4, 3, 5, 6, 7, 8], [8, 6, 5, 1, 9, 7, 3, 2, 4], [7, 3, 4, 6, 8, 2, 5, 9, 1]]
+		fil(solve(board))
 	def fil(board):
 		
 		for rows in range(2,11):
@@ -156,8 +209,10 @@ def solver():
 	btn.grid(row=20,column=1,columnspan=5,pady=20)
 	draw9x9Grid()
 	deneme=[[3,4, 7, 0, 5, 1, 0, 0, 0],[0, 1, 9, 0, 0, 0, 0, 0, 0],[5, 0, 6, 3, 4, 0, 0, 0, 0],[0, 7, 0, 0, 0, 3, 0, 0, 2],[0, 0, 1, 0, 0, 0, 7, 0, 0],[9, 0, 0, 8, 0, 0, 0, 5, 0],[0, 0, 0, 0, 3, 5, 6, 0, 8],[0, 0, 0, 0, 0, 0, 3, 2, 0],[0, 0, 0, 6, 8, 0, 5, 9, 1]]
-	fil(deneme)
-	
+	print("Deneme : ", len(deneme))
+	print("First Array : ", len(firstArray))
+	fil(sudokuSolver.field)
+	label.grid(row=1, column=2, columnspan=4)
 	
 			
 def determineText(img_no):
