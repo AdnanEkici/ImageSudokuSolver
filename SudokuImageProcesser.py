@@ -86,26 +86,6 @@ def denoise_image_with_connected_components(noisyDigitArray):
 
     return denoised_digits
 
-def clearify_image(image):
-
-    rows,cols = image.shape
-    for i in range(rows):
-        for j in range(15):
-            image[i][j] = 0
-
-    for i in range(rows-1 , 0 , -1):
-        for j in range(cols-1 , 50 , -1):
-            image[i][j] = 0
-
-    for i in range(5):
-        for j in range(cols):
-            image[i][j] = 0
-
-    for j in range(cols-1 , 0 , -1):
-        for i in range(rows-1 , 43 , -1):
-            image[i][j] = 0
-
-    return image
 
 def get_white_black_ratio(digit):
     number_of_white_pix = np.sum(digit == 255)
